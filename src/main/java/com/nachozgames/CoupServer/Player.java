@@ -4,14 +4,16 @@ import java.util.*;
 
 public class Player {
     int coins;
+    int state;
     String uuid;
     String name;
     Vector<Card> cards; 
 
     public Player(String uuid){
-        this.coins = 2;
+        this.coins = 0;
         this.uuid = uuid;
         this.name = "";
+        this.state = 0;
         cards = new Vector<Card>();
     }
 
@@ -23,19 +25,31 @@ public class Player {
         return this.name;
     }
 
-    public void UpdateCoins(int newCoins){
+    public String getUUID(){
+        return this.uuid;
+    }
+
+    public void setState(int state){
+        this.state = state;
+    }
+
+    public int getState(){
+        return this.state;
+    }
+
+    public void updateCoins(int newCoins){
         this.coins=newCoins;
     }
 
-    public void AddCard(Card card){
+    public void addCard(Card card){
         this.cards.add(card);
     }
 
-    public Vector<Card> GetCards(){
+    public Vector<Card> getCards(){
         return cards;
     }
 
-    public void RemoveCard(int i){
+    public void removeCard(int i){
         this.cards.removeElementAt(i);
     }
 

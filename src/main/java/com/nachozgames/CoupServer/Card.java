@@ -7,12 +7,16 @@ public class Card {
     public static final int CARD_CONTESSA = 3;
     public static final int CARD_DUKE = 4;
     
-    int card_type;
-    boolean alive;
+    private int cardType;
+    private boolean alive;
 
-    public Card(int card_type){
-        this.card_type=card_type;
+    public Card(int cardType){
+        this.cardType=cardType;
         this.alive=true;
+    }
+
+    public int getCardType(){
+        return this.cardType;
     }
 
     public void setAlive(boolean alive){
