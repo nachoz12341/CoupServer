@@ -81,15 +81,18 @@ public class RESTController {
 	public ResponseEntity<?> serverGameStart() {
         if(!game.gameStarted()){
             game.gameStart();
+            System.out.println("Game started!");
             return new ResponseEntity<>("{}",HttpStatus.OK);
         }
+        System.out.println("Game was already started!");
         return new ResponseEntity<>("{}",HttpStatus.BAD_REQUEST);
     }
 
     //Used mainly for debug will reset game
     @PostMapping(value="/clear-game", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<?> clearGame(@PathVariable String uuid) {
+	public ResponseEntity<?> clearGame() {
         game = new CoupGame();
+        System.out.println("Game was reset!");
         return new ResponseEntity<>("{}",HttpStatus.OK);
     }
 
