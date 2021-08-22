@@ -4,15 +4,21 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.apache.catalina.connector.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.MediaType;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.google.gson.Gson; 
-import com.google.gson.GsonBuilder;  
+import com.google.gson.GsonBuilder;
+
+import java.io.IOException;
+import java.rmi.server.ObjID;
+import java.util.Map;
 
 @RestController
 public class RESTController {
@@ -76,7 +82,31 @@ public class RESTController {
         return new ResponseEntity<>(json,HttpStatus.OK);
     }
 
-    //Used mainly for debug will reset game
+    @PostMapping(value="client-post-game-update/uuid/{uuid}", consumes=MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> clientPostGameUpdate(@RequestBody String payload,@PathVariable String uuid){
+        Player p = game.getPlayer(uuid); 
+
+        if(p==null)
+            return new ResponseEntity<>("{}",HttpStatus.BAD_REQUEST);
+
+        ObjectMapper mapper = new ObjectMapper();
+        try{
+            Map<String,String> map = mapper.readValue(payload, Map.class);
+            game.gameUpdate(p,map);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+
+        return new ResponseEntity<>("{}",HttpStatus.OK);
+    }
+    
+    @GetMapping(value="client-player-list",produces=MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> clientPlayerList(){
+        Gson gson = new Gson();
+        String playerJson = "{\"players\":"+gson.toJson(game.players)+"}";
+        return new ResponseEntity<>(playerJson,HttpStatus.OK);
+    }
+
     @PostMapping(value="/server-game-start", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<?> serverGameStart() {
         if(!game.gameStarted()){

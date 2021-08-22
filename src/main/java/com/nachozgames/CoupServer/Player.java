@@ -37,8 +37,12 @@ public class Player {
         return this.state;
     }
 
+    public int getCoins(){
+        return this.coins;
+    }
+
     public void updateCoins(int newCoins){
-        this.coins=newCoins;
+        this.coins+=newCoins;
     }
 
     public void addCard(Card card){

@@ -2,6 +2,8 @@ package com.nachozgames.CoupServer;
 
 import java.util.*;
 
+import ch.qos.logback.core.joran.conditional.ElseAction;
+
 public class CoupGame {
     public static final int STATE_WAIT_FOR_GAME         = 0;
     public static final int STATE_YOUR_TURN             = 1;
@@ -15,8 +17,23 @@ public class CoupGame {
     public static final int STATE_KILL_ROLE             = 9;
     public static final int STATE_KILL_ROLE_WAIT        = 10;
 
+    public static final int ACTION_INCOME           = 0;
+    public static final int ACTION_FOREIGN_AID      = 1;
+    public static final int ACTION_COUP             = 2;
+    public static final int ACTION_AMBASSADOR       = 3;
+    public static final int ACTION_ASSASSIN         = 4;
+    public static final int ACTION_CAPTAIN          = 5;
+    public static final int ACTION_DUKE             = 6;
+    public static final int ACTION_BLOCK_CONTESSA   = 7;
+    public static final int ACTION_BLOCK_CAPTAIN    = 8;
+    public static final int ACTION_BLOCK_AMBASSADOR = 9;
+    public static final int ACTION_BLOCK_DUKE       = 10;
+    public static final int ACTION_RESPONSE_KILL    = 11;
+
     Vector<Player> players;
     Vector<Card> deck;
+
+    String activePlayerUUID;
 
     Boolean started;
     
@@ -24,6 +41,7 @@ public class CoupGame {
         players = new Vector<Player>();
         deck = new Vector<Card>();
         started=false;
+        activePlayerUUID="";
     }
 
     public void addPlayer(Player player){
@@ -78,8 +96,76 @@ public class CoupGame {
 
         //Set state to your turn for only the first player
         players.elementAt(0).setState(STATE_YOUR_TURN);
+        activePlayerUUID=players.elementAt(0).getUUID();
 
         started=true;
+    }
+
+    public void gameUpdate(Player p, Map<String, String> updateMap){
+        int gameAction = Integer.parseInt(updateMap.get("action"));
+        
+        switch(gameAction){
+            case ACTION_INCOME:
+                p.updateCoins(1);
+                nextTurn();
+                System.out.println("Player "+p.getName()+" collected 1 coin from income");
+            break;
+
+            case ACTION_COUP:
+                if(p.getCoins()>=7)
+                {
+                    p.setState(STATE_KILL_ROLE_WAIT);
+                    p.updateCoins(-7);
+
+                    String targetId=updateMap.get("target");
+                    Player targetPlayer=getPlayer(targetId);
+
+                    targetPlayer.setState(STATE_KILL_ROLE);
+                    System.out.println("Player "+p.getName()+" couped "+targetPlayer.getName()+" for 7 coins");
+                }
+                else
+                    System.out.println("Player "+p.getName()+" does not have enough coins to coup");
+            break;
+
+            case ACTION_RESPONSE_KILL:
+                int targetCard = Integer.parseInt(updateMap.get("card"));
+                Vector<Card> cards = p.getCards();
+                cards.elementAt(targetCard).setAlive(false);
+
+                nextTurn();
+                System.out.println("Player "+p.getName()+" chose a card to kill");
+            break;
+        }
+    }
+
+    private void nextTurn(){
+        boolean nextPlayer=false;
+        boolean setActive=false;
+
+        //Iterate through list set all players state to other turn
+        for (int i=0;i<players.size();i++)
+        {
+            Player p = players.elementAt(i);
+            p.setState(STATE_OTHER_TURN);
+
+            //Change active player
+            if(nextPlayer && !setActive)
+            {
+                p.setState(STATE_YOUR_TURN);
+                activePlayerUUID=p.getUUID();
+                setActive=true;
+            }
+
+            //When we find the current player set flag to change active player
+            if(p.getUUID()==activePlayerUUID)
+                nextPlayer=true;
+        }
+
+        //If we still haven't set active then the next player has to be the first player
+        if(!setActive){
+            players.elementAt(0).setState(STATE_YOUR_TURN);
+            activePlayerUUID=players.elementAt(0).getUUID();
+        }
     }
 
     private void createDeck(){
